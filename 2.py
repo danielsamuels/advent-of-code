@@ -1017,10 +1017,29 @@ def calculate_area(w, h, l):
 assert calculate_area(2, 3, 4) == 58
 assert calculate_area(1, 1, 10) == 43
 
+def calculate_ribbon(*args):
+    length = 0
+
+    # Get the two smallest sides.
+    side_1, side_2, side_3 = sorted(args)
+
+    length += side_1 * 2
+    length += side_2 * 2
+
+    length += args[0] * args[1] * args[2]
+
+    return length
+
+assert calculate_ribbon(2, 3, 4) == 34
+assert calculate_ribbon(1, 1, 10) == 14
+
 total = 0
+ribbon_length = 0
 
 for line in presents.split('\n'):
     dimensions = line.split('x')
     total += calculate_area(int(dimensions[0]), int(dimensions[1]), int(dimensions[2]))
+    ribbon_length += calculate_ribbon(int(dimensions[0]), int(dimensions[1]), int(dimensions[2]))
 
 print total
+print ribbon_length
