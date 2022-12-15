@@ -1,6 +1,8 @@
 import enum
 import itertools
 
+from utils.grid import bridge_points, bridge_str_points
+
 Position = tuple[int, int]
 Sand = set[Position]
 Walls = set[Position]
@@ -12,37 +14,18 @@ class Status(enum.Enum):
     OUT_OF_BOUNDS = enum.auto()
 
 
-def bridge_points(input_points: tuple[str, str]) -> Walls:
-    [start_x, start_y], end = [tuple(map(int, point.split(','))) for point in input_points]
-    diff_x, diff_y = tuple(itertools.starmap(lambda a, b: b - a, zip([start_x, start_y], end)))
-    output_points = set()
-
-    if diff_x != 0:
-        step = int(diff_x / abs(diff_x))
-        r = list(range(start_x, start_x + diff_x + step, step))
-        for new_x in r:
-            output_points.add((new_x, start_y))
-    elif diff_y != 0:
-        step = int(diff_y / abs(diff_y))
-        r = list(range(start_y, start_y + diff_y + step, step))
-        for new_y in r:
-            output_points.add((start_x, new_y))
-
-    return output_points
-
-
 def process_input(data: str, step: int = 1) -> Walls:
     walls = set([
         p
         for wall in data.split('\n')
         for points in itertools.pairwise(wall.split(' -> '))
-        for p in bridge_points(points)
+        for p in bridge_str_points(*points)
     ])
 
     # Step 2: Add another wall
     if step == 2:
         bottom = max(y for x, y in walls) + 2
-        for p in bridge_points((f'-1000,{bottom}', f'1000,{bottom}')):
+        for p in bridge_points((-1000, bottom), (1000, bottom)):
             walls.add(p)
 
     return walls
