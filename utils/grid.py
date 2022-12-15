@@ -37,3 +37,9 @@ def compute_new_position(start: Position, diff: Position) -> Position:
 def bridge_diff(start: Position, diff: Position) -> Generator[Position, None, None]:
     end = compute_new_position(start, diff)
     return bridge_points(start, end)
+
+
+def manhattan_distance(point_a, point_b):
+    # Calculate the manhattan distance
+    [ax, ay], [bx, by] = point_a, point_b
+    return abs(ax - bx) + abs(ay - by)
