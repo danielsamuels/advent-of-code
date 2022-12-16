@@ -9,16 +9,16 @@ class Graph:
         self.edges = [[-1 for i in range(num_of_vertices)] for j in range(num_of_vertices)]
         self.visited = []
 
-    def add_one_way_edge(self, u, v, weight):
+    def add_one_way_edge(self, u: int, v: int, weight: int):
         self.edges[u][v] = weight
 
-    def add_two_way_edge(self, u, v, weight):
+    def add_two_way_edge(self, u: int, v: int, weight: int):
         self.edges[u][v] = weight
         self.edges[v][u] = weight
 
 
 def dijkstra(graph, start_vertex):
-    print(f'Computing paths from {start_vertex}')
+    # print(f'Computing paths from {start_vertex}')
     graph = copy.deepcopy(graph)
     D = {v: float('inf') for v in range(graph.v)}
     D[start_vertex] = 0
