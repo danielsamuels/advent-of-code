@@ -1,6 +1,7 @@
 import itertools
 import math
 import re
+import sys
 from typing import TypedDict, Generator
 
 from tqdm import tqdm
@@ -59,7 +60,8 @@ class Day:
                      minute: int,
                      current_position: int,
                      open_valves: dict[int, int],
-                     current_route: list) -> int:
+                     current_route: list,
+                     limit: int = None) -> int:
         # Based on how long it would take to get to a valve and open it
         # What is it the highest possible flow rate available?
         d = dijkstra(self.graph, current_position)
@@ -85,7 +87,10 @@ class Day:
         nested_scores = []
         for dest, dest_score in rates.items():
             next_minute = minute + d[dest] + 1
-            if next_minute >= 30 or len(current_route) >= 7:
+            limit = limit or 1000
+            if next_minute >= 30 or len(current_route) >= limit:
+                route = ', '.join(self.names[v] for v in open_valves.keys())
+                print(f'Route: {route} scores {score}, takes {minute} minutes')
                 nested_scores.append(score)
             else:
                 future_rates = self.step_1_rates(
@@ -93,7 +98,8 @@ class Day:
                     next_minute,
                     dest,
                     {**open_valves, dest: next_minute},
-                    [*current_route, (next_minute, dest, dest_score)]
+                    [*current_route, (next_minute, dest, dest_score)],
+                    limit,
                 )
                 nested_scores.append(future_rates)
         return max(nested_scores)
@@ -162,6 +168,14 @@ class Day:
 
     def run_step_2(self) -> int:
         max_len = math.ceil(len(self.useful_valves) / 2)
+        start = self.names.index('AA')
+        # positions = [start, start]
+        open_valves = {start: 0}
+        short_routes = self.step_1_rates(0, 0, start, open_valves, [(0, start, 0)], max_len)
+        print(short_routes)
+
+    def run_step_2_testing(self) -> int:
+        max_len = math.ceil(len(self.useful_valves) / 2)
 
         # Based on the current state, what are the two best moves?
         open_valves = set()
@@ -217,9 +231,9 @@ if __name__ == "__main__":
     day = Day(data)
 
     # 2359
-    result = day.run_step_1()
-    print(f'Step 1: {result}')
+    # result = day.run_step_1()
+    # print(f'Step 1: {result}')
 
-    # result_2 = day.run_step_2()
-    # # 3882 is too high
-    # print(f'Step 2: {result_2}')
+    # 3882 is too high
+    result_2 = day.run_step_2()
+    print(f'Step 2: {result_2}')
