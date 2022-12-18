@@ -43,3 +43,17 @@ def manhattan_distance(point_a, point_b):
     # Calculate the manhattan distance
     [ax, ay], [bx, by] = point_a, point_b
     return abs(ax - bx) + abs(ay - by)
+
+
+def print_grid(grid: list[list[int]]):
+    populated_char = '@'
+    for row in grid:
+        if not any(col != 0 for col in row):
+            populated_char = '#'
+
+        print('|', ''.join(
+            '.' if col == 0
+            else populated_char if col == 1
+            else '-'
+            for col in row
+        ), '|')

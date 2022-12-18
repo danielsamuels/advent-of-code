@@ -5,19 +5,17 @@ https://adventofcode.com/2022
 File base:
 ```python
 class Day:
-    def __init__(self):
-        test_filename = __file__.split('\\')[-1].split('.py')[0]
-        with open(f'data/{test_filename}.txt', 'r') as f:
-            data = f.read()
-
-        print(data)    
-
+    def __init__(self, data: str): ...
     def run_step_1(self) -> int: ...
     def run_step_2(self) -> int: ...
 
 
 if __name__ == "__main__":
-    day = Day()
+    test_filename = __file__.split('\\')[-1].split('.py')[0]
+    with open(f'data/{test_filename}.txt', 'r') as f:
+        read_data = f.read()
+
+    day = Day(read_data)
 
     result = day.run_step_1()
     print(f'Step 1: {result}')
