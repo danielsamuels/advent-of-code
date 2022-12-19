@@ -16,6 +16,13 @@ class Day:
     def __init__(self, data: str):
         self.cubes = self.parse_input(data)
 
+        x_vals = sorted(set(c[0] for c in self.cubes))
+        self.x_range = min(x_vals), max(x_vals)
+        y_vals = sorted(set(c[1] for c in self.cubes))
+        self.y_range = min(y_vals), max(y_vals)
+        z_vals = sorted(set(c[2] for c in self.cubes))
+        self.z_range = min(z_vals), max(z_vals)
+
     def parse_input(self, data: str) -> list[tuple]:
         return [
             tuple(map(int, line.split(',')))
@@ -30,22 +37,32 @@ class Day:
         ])
 
     def compute_unconnected_sans_interior(self):
-        interior = self.interior_cubes()
-
-        combined = set(self.cubes) - set(interior)
+        combined = set(self.cubes) | self.interior_cubes()
         return sum([
             (x + dx, y + dy, z + dz) not in self.cubes
             for x, y, z in combined
             for dx, dy, dz in DIRECTIONS
         ])
 
-    def interior_cubes(self) -> list[tuple]:
-        x_vals = sorted(set(c[0] for c in self.cubes))
-        x_min, x_max = min(x_vals), max(x_vals)
-        y_vals = sorted(set(c[1] for c in self.cubes))
-        y_min, y_max = min(y_vals), max(y_vals)
-        z_vals = sorted(set(c[2] for c in self.cubes))
-        z_min, z_max = min(z_vals), max(z_vals)
+    def compute_external_faces(self) -> int:
+        # Build a 3d grid
+        all_cubes = set(self.cubes) | self.interior_cubes()
+        grid = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
+        for x, y, z in self.cubes:
+            grid[z][y][x] = 1
+
+        for z in range(self.z_range[0], self.z_range[1] + 1):
+            column = [0]
+            for y in range(self.y_range[0], self.y_range[1] + 1):
+                for x in range(self.x_range[0], self.x_range[1] + 1):
+                    print(grid[z])
+
+        return 0
+
+    def interior_cubes(self) -> set[tuple]:
+        x_min, x_max = self.x_range
+        y_min, y_max = self.y_range
+        z_min, z_max = self.z_range
 
         # For each cube, is there a cube on:
         # - The same X-axis to the left and right
@@ -77,13 +94,13 @@ class Day:
             if surrounded:
                 surrounded_cubes.append((x, y, z))
 
-        return surrounded_cubes
+        return set(surrounded_cubes)
 
     def run_step_1(self) -> int:
         return self.compute_unconnected_faces()
 
     def run_step_2(self) -> int:
-        return self.compute_unconnected_sans_interior()
+        return self.compute_external_faces()
 
 
 if __name__ == "__main__":
