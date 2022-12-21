@@ -1,33 +1,61 @@
 import os
 import random
+import re
 from multiprocessing import Pool
+from typing import Union
 
 from tqdm import trange
+
+Material = Union['geode', 'obsidian', 'clay', 'ore']
+materials: list[Material] = ['geode', 'obsidian', 'clay', 'ore']
+
+
+class Blueprint:
+    robot_costs: dict[Material, dict[Material, int]]
+    robot_inventory: dict[Material, dict[str, int]]
+    material_inventory: dict[Material, int]
+
+    def __init__(self, definition: str):
+        results = list(map(int, re.findall(r'(\d+)', definition)))
+        self.robot_costs = {
+            'ore': {'ore': results[1]},
+            'clay': {'ore': results[2]},
+            'obsidian': {'ore': results[3], 'clay': results[4]},
+            'geode': {'ore': results[5], 'obsidian': results[6]}
+        }
+        self.robot_inventory = {
+            'ore': {'own': 1, 'pending': 0},
+            'clay': {'own': 0, 'pending': 0},
+            'obsidian': {'own': 0, 'pending': 0},
+            'geode': {'own': 0, 'pending': 0},
+        }
+        self.material_inventory = {'ore': 0, 'clay': 0, 'obsidian': 0, 'geode': 0}
+
+    def can_afford(self, material: Material) -> bool:
+        return all([
+            self.material_inventory[material] >= amount
+            for material, amount in self.robot_costs[material].items()
+        ])
+
+    @property
+    def affordable_robots(self) -> list[Material]:
+        return [
+            material
+            for material in materials
+            if self.can_afford(material)
+        ]
+
+    def distance_to(self, material: Material):
+        print()
 
 
 class Day:
     def __init__(self, data: str):
-        self.blueprints = self.parse_input(data)
-        self.materials = ['geode', 'obsidian', 'clay', 'ore']  # This is also the purchase priority
-
-    @staticmethod
-    def parse_input(data: str):
-        blueprints = []
-        for line in data.splitlines():
-            blueprint = {}
-            robots = line.split(': ')[1].split('.')
-            for robot in robots:
-                match robot.split():
-                    case ['Each', robot_type, 'robot', 'costs', num_ore, 'ore']:
-                        blueprint[robot_type] = {'ore': int(num_ore)}
-                    case ['Each', robot_type, 'robot', 'costs', num_ore, 'ore', 'and', num_clay, 'clay']:
-                        blueprint[robot_type] = {'ore': int(num_ore), 'clay': int(num_clay)}
-                    case ['Each', robot_type, 'robot', 'costs', num_ore, 'ore', 'and', num_obsidian, 'obsidian']:
-                        blueprint[robot_type] = {'ore': int(num_ore), 'obsidian': int(num_obsidian)}
-
-            blueprints.append(blueprint)
-
-        return blueprints
+        self.blueprints = [
+            Blueprint(line)
+            for line in data.splitlines()
+        ]
+        self.materials: list[Material] = ['geode', 'obsidian', 'clay', 'ore']  # This is also the purchase priority
 
     @staticmethod
     def can_afford(need: dict[str, int], have: dict[str, int]):
@@ -76,8 +104,9 @@ class Day:
             material: max(robot.get(material, 0) for robot in blueprint.values())
             for material in self.materials
         }
+        time_limit = 24
 
-        for minute in range(1, 25):
+        for minute in range(1, time_limit + 1):
             """
             Order of operations:
             - Purchase new robots
@@ -86,8 +115,17 @@ class Day:
             """
             print(f'== Minute {minute} ==')
 
+            # Given the current means of production, how far are we from
+            # being able to purchase an obsidian or geode robot?
+            distance_to_obsidian = 0
+            distance_to_geode = 0
+            # Does making a purchase of an ore or clay robot increase the distance to obs/geo?
+            # If no, then it's a "free" purchase, so do it.
+
+            # Never buy more clay robots than the most expensive robot costs in clay.
+
             # If we have time to purchase something and have it make a difference
-            if minute <= 22:
+            if minute < time_limit:
                 # Can we afford a geode-cracker?
                 if self.can_afford(blueprint['geode'], materials):
                     expenditure = ' and '.join([
@@ -127,7 +165,8 @@ class Day:
                         can_afford = self.can_afford(blueprint[material], materials)
 
                         limit = min(3, 24 - minute)
-                        will_afford_better = self.will_afford_geode_or_obsidian_soon(blueprint, robots, materials, limit)
+                        will_afford_better = self.will_afford_geode_or_obsidian_soon(blueprint, robots, materials,
+                                                                                     limit)
                         if can_afford and not will_afford_better:
                             expenditure = ' and '.join([
                                 f'{amount} {material}'
@@ -142,7 +181,8 @@ class Day:
             for material, values in robots.items():
                 if count := robots[material]['built']:
                     materials[material] += count
-                    print(f"{count} {material} robot(s) collects {count} {material}; you now have {materials[material]} {material}.")
+                    print(
+                        f"{count} {material} robot(s) collects {count} {material}; you now have {materials[material]} {material}.")
 
             # Turn pending robots into real ones
             for material, values in robots.items():
