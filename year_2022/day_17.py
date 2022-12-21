@@ -1,15 +1,12 @@
 import copy
 import enum
 import itertools
-import re
-from collections import defaultdict, Counter
+from collections import defaultdict
 from typing import Generator
 
-from defaultlist import defaultlist
 from tqdm import trange, tqdm
 
 from utils.grid import print_grid
-
 
 row_options = [list(map(int, "{:b}".format(n).rjust(7 ,'0'))) for n in range(128)]
 
