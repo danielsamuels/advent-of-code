@@ -1,7 +1,15 @@
+import enum
 import itertools
 from typing import Generator
 
 Position = tuple[int, int]
+# sqrt(tiles / 6) = edge length
+
+class Direction(Position, enum.Enum):
+    UP = (0, -1)
+    DOWN = (0, 1)
+    LEFT = (-1, 0)
+    RIGHT = (1, 0)
 
 
 def bridge_points(start: Position, end: Position) -> Generator[Position, None, None]:
@@ -57,3 +65,16 @@ def print_grid(grid: list[list[int]]):
             else '-'
             for col in row
         ), '|')
+
+
+def find_in_grid(grid, target, x_hint=None, y_hint=None) -> Position:
+    for y, row in enumerate(grid):
+        if y_hint is not None and y != y_hint:
+            continue
+
+        for x, cell in enumerate(row):
+            if x_hint is not None and x != x_hint:
+                continue
+
+            if cell == target:
+                return x, y
