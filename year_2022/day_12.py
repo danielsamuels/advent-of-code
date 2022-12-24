@@ -48,19 +48,19 @@ def available_directions(heightmap, position: Position) -> set[Direction]:
 
     # Can go up?
     if y > 0 and heightmap[y - 1][x] <= max_value:
-        directions.add(Direction.UP)
+        directions.add(Direction.NORTH)
     # Can go down?
     # If 5x5, y must be < 4 [0, 1, 2, 3, 4]
     if y < height - 1 and heightmap[y + 1][x] <= max_value:
-        directions.add(Direction.DOWN)
+        directions.add(Direction.SOUTH)
 
     # Can go left?
     if x > 0 and heightmap[y][x - 1] <= max_value:
-        directions.add(Direction.LEFT)
+        directions.add(Direction.WEST)
 
     # Can go right?
     if x < width - 1 and heightmap[y][x + 1] <= max_value:
-        directions.add(Direction.RIGHT)
+        directions.add(Direction.EAST)
 
     return directions
 

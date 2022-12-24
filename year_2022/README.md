@@ -30,7 +30,7 @@ Test base:
 ```python
 from year_2022.day_16 import Day
 
-test_data = """""".strip()
+test_data = """""".strip('\n')
 
 
 def test_run_step_1():

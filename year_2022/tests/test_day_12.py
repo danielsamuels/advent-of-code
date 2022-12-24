@@ -32,17 +32,17 @@ def test_run_step_1():
 
 
 @pytest.mark.parametrize('location, expectation', [
-    [(0, 0), {Direction.RIGHT, Direction.DOWN}],
-    [(1, 0), {Direction.LEFT, Direction.RIGHT, Direction.DOWN}],
-    [(2, 0), {Direction.LEFT, Direction.DOWN}],
+    [(0, 0), {Direction.EAST, Direction.SOUTH}],
+    [(1, 0), {Direction.WEST, Direction.EAST, Direction.SOUTH}],
+    [(2, 0), {Direction.WEST, Direction.SOUTH}],
 
-    [(0, 1), {Direction.RIGHT, Direction.UP}],
-    [(1, 1), {Direction.LEFT, Direction.RIGHT, Direction.UP, Direction.DOWN}],
-    [(2, 1), {Direction.LEFT, Direction.UP}],
+    [(0, 1), {Direction.EAST, Direction.NORTH}],
+    [(1, 1), {Direction.WEST, Direction.EAST, Direction.NORTH, Direction.SOUTH}],
+    [(2, 1), {Direction.WEST, Direction.NORTH}],
 
-    [(0, 2), {Direction.RIGHT, Direction.UP}],
-    [(1, 2), {Direction.LEFT, Direction.UP}],
-    [(2, 2), {Direction.LEFT, Direction.UP}],
+    [(0, 2), {Direction.EAST, Direction.NORTH}],
+    [(1, 2), {Direction.WEST, Direction.NORTH}],
+    [(2, 2), {Direction.WEST, Direction.NORTH}],
 ])
 def test_available_directions(location, expectation):
     layout = 'abc\nbcd\nedg'

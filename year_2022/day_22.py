@@ -27,7 +27,7 @@ class Day:
             lambda i: int(i) if i not in ['L', 'R'] else i,
             [s for s in re.split(r'([LR])', instructions) if s != '']
         )
-        self.direction = Direction.RIGHT
+        self.direction = Direction.EAST
         self.position = (next(i for i, v in enumerate(self.grid[0]) if v != ' '), 0)
 
         self.x_cycles = [
@@ -48,7 +48,7 @@ class Day:
         return self.grid[py][px]
 
     def rotate(self, rotation: str) -> None:
-        directions = [Direction.LEFT, Direction.UP, Direction.RIGHT, Direction.DOWN]
+        directions = [Direction.WEST, Direction.NORTH, Direction.EAST, Direction.SOUTH]
         rotations = {'L': -1, 'R': 1}
         d_index = directions.index(self.direction) + rotations[rotation]
         d_index %= len(directions)
@@ -62,14 +62,14 @@ class Day:
         # If wanted to move X steps in Y direction, where do we _actually_ end up?
         # This is taking into account walls, wrapping etc.
 
-        if self.direction in [Direction.LEFT, Direction.RIGHT]:
+        if self.direction in [Direction.WEST, Direction.EAST]:
             cycle = self.x_cycles[self.position[1]]
             fixed_x, fixed_y = False, True
         else:
             cycle = self.y_cycles[self.position[0]]
             fixed_x, fixed_y = True, False
 
-        if self.direction in [Direction.LEFT, Direction.UP]:
+        if self.direction in [Direction.WEST, Direction.NORTH]:
             cycle = cycle[::-1]
 
         position_index = cycle.index(self.position_id) + 1
@@ -104,10 +104,10 @@ class Day:
                 self.move(instruction)
 
         facing_scores = {
-            Direction.RIGHT: 0,
-            Direction.DOWN: 1,
-            Direction.LEFT: 2,
-            Direction.UP: 3,
+            Direction.EAST: 0,
+            Direction.SOUTH: 1,
+            Direction.WEST: 2,
+            Direction.NORTH: 3,
         }
         print(f'Final position: {self.position}, facing {self.direction.name}')
         return sum([

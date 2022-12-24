@@ -1,15 +1,22 @@
 import enum
 import itertools
+from collections import defaultdict
 from typing import Generator
 
 Position = tuple[int, int]
+
+
 # sqrt(tiles / 6) = edge length
 
 class Direction(Position, enum.Enum):
-    UP = (0, -1)
-    DOWN = (0, 1)
-    LEFT = (-1, 0)
-    RIGHT = (1, 0)
+    NORTHWEST = (-1, -1)
+    NORTH = (0, -1)
+    NORTHEAST = (1, -1)
+    SOUTHWEST = (-1, 1)
+    SOUTH = (0, 1)
+    SOUTHEAST = (1, 1)
+    WEST = (-1, 0)
+    EAST = (1, 0)
 
 
 def bridge_points(start: Position, end: Position) -> Generator[Position, None, None]:
@@ -53,18 +60,17 @@ def manhattan_distance(point_a, point_b):
     return abs(ax - bx) + abs(ay - by)
 
 
-def print_grid(grid: list[list[int]]):
-    populated_char = '@'
+def print_grid(grid: list[list[int]], *, borders=True):
+    populated_char = '#'
     for row in grid:
-        if not any(col != 0 for col in row):
-            populated_char = '#'
-
-        print('|', ''.join(
-            '.' if col == 0
-            else populated_char if col == 1
-            else '-'
+        middle = ''.join(
+            '.' if col is None else populated_char
             for col in row
-        ), '|')
+        )
+        if borders:
+            print('|', middle, '|')
+        else:
+            print(middle)
 
 
 def find_in_grid(grid, target, x_hint=None, y_hint=None) -> Position:
@@ -78,3 +84,77 @@ def find_in_grid(grid, target, x_hint=None, y_hint=None) -> Position:
 
             if cell == target:
                 return x, y
+
+
+def parse_grid(data: str, mapping: dict = None) -> dict:
+    """Take a string and turn it into a dict"""
+    DROP = object()
+
+    if mapping is None:
+        mapping = {
+            '.': DROP,
+            '#': 1,
+        }
+
+    grid = defaultdict(int)
+    for y, row in enumerate(data.splitlines()):
+        for x, cell in enumerate(row):
+            value = mapping.get(cell, 1)
+            if value == DROP:
+                continue
+
+            grid[(x, y)] = value
+
+    return grid
+
+
+def relative_points_occupied(grid: dict, position: Position, directions: list[Direction]) -> list[bool]:
+    return [
+        grid.get(compute_new_position(position, direction), False)
+        for direction in directions
+    ]
+
+
+Bounds = tuple[Position, Position, Position, Position]
+
+
+def grid_bounds(grid: dict[Position, int]) -> Bounds:
+    """Returns top left, top right, bottom left, bottom right"""
+    xs = []
+    ys = []
+    for x, y in grid.keys():
+        xs.append(x)
+        ys.append(y)
+
+    min_x, max_x = min(xs), max(xs)
+    min_y, max_y = min(ys), max(ys)
+
+    return (min_x, min_y), (max_x, min_y), (min_x, max_y), (max_x, max_y)
+
+
+def point_within_bounds(position: Position, bounds: Bounds) -> bool:
+    px, py = position
+    tl_x, tl_y = bounds[0]
+    br_x, br_y = bounds[3]
+    within_x = tl_x <= px <= br_x
+    within_y = tl_y <= py <= br_y
+    return within_x and within_y
+
+
+def points_within_bounds(grid, bounds: Bounds) -> list[Position]:
+    return [
+        position
+        for position in grid.keys()
+        if point_within_bounds(position, bounds)
+    ]
+
+
+def dict_grid_to_list(grid: dict) -> list[list[int]]:
+    [tl_x, tl_y], _, _, [br_x, br_y] = grid_bounds(grid)
+    return [
+        [
+            grid.get((x, y), None)
+            for x in range(tl_x, br_x + 1)
+        ]
+        for y in range(tl_y, br_y + 1)
+    ]
