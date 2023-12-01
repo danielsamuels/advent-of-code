@@ -1,5 +1,4 @@
 import functools
-import re
 import string
 
 DIGITS = {
@@ -16,6 +15,7 @@ DIGITS = {
 DIGIT_WORDS = list(DIGITS.keys())
 DIGIT_NUMBERS = list(string.digits)[1:]
 DIGIT_OPTIONS = DIGIT_WORDS + DIGIT_NUMBERS
+
 
 class Day:
     def __init__(self, data: str):
@@ -36,7 +36,6 @@ class Day:
 
         return sum(results)
 
-
     def run_step_2(self) -> int:
         results = []
         for line in self.data:
@@ -54,7 +53,6 @@ class Day:
 
             results.append(int(first_number + last_number))
 
-        # 53896 is too high
         return sum(results)
 
 
