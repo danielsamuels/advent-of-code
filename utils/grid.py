@@ -1,10 +1,10 @@
 import enum
 import itertools
 from collections import defaultdict
-from typing import Generator
+from typing import Generator, Optional, Union
 
 Position = tuple[int, int]
-
+Grid = dict[Position, str]
 
 # sqrt(tiles / 6) = edge length
 
@@ -86,7 +86,13 @@ def find_in_grid(grid, target, x_hint=None, y_hint=None) -> Position:
                 return x, y
 
 
-def parse_grid(data: str, mapping: dict = None) -> dict:
+def parse_grid(
+        data: str,
+        mapping: Optional[bool | dict] = None,
+        *,
+        ignore_dots: bool = False,
+        merge_contiguous: type = None,
+) -> dict:
     """Take a string and turn it into a dict"""
     DROP = object()
 
@@ -98,8 +104,13 @@ def parse_grid(data: str, mapping: dict = None) -> dict:
 
     grid = defaultdict(int)
     for y, row in enumerate(data.splitlines()):
-        for x, cell in enumerate(row):
-            value = mapping.get(cell, 1)
+        for x, value in enumerate(row):
+            if mapping is not False:
+                value = mapping.get(value, 1)
+
+            if value == '.' and ignore_dots:
+                continue
+
             if value == DROP:
                 continue
 
@@ -113,6 +124,75 @@ def relative_points_occupied(grid: dict, position: Position, directions: list[Di
         grid.get(compute_new_position(position, direction), False)
         for direction in directions
     ]
+
+def all_relative_point_occupation(grid: dict, position: Position) -> dict[Direction, dict]:
+    """From a given point, which directions are occupied?"""
+    result = {}
+    for direction in Direction:
+        point = compute_new_position(position, direction)
+        if point_val := grid.get(point):
+            result[direction] = {
+                'position': point,
+                'value': point_val
+            }
+
+    return result
+
+def get_contiguous_value(grid: Grid, position: Position):
+    """From a given position, find the start and end point of a string"""
+    start_point = position
+    result = grid.get(start_point)
+
+    while (position := compute_new_position(position, Direction.WEST)) and (value := grid.get(position)):
+        if value.isdigit():
+            result = value + result
+
+    position = start_point
+    while (position := compute_new_position(position, Direction.EAST)) and (value := grid.get(position)):
+        if value.isdigit():
+            result = result + value
+
+    return result
+
+def get_contiguous_numerical_ranges(grid: Grid):
+    contiguous_ranges = {}
+
+    range_value = ''
+    contiguous_range = ()
+    previous_position = None
+
+    for position, value in grid.items():
+        # Was the last cell directly before this one?
+        left_position = compute_new_position(position, Direction.WEST)
+        if previous_position and previous_position != left_position:
+            # The previous range has ended.
+            if range_value:
+                contiguous_ranges[contiguous_range] = range_value
+
+            # The new range has begun
+            range_value = ''
+            contiguous_range = ()
+
+        if value.isdigit():
+            contiguous_range = (*contiguous_range, position)
+            range_value += value
+        else:
+            # The previous range has ended.
+            if range_value:
+                contiguous_ranges[contiguous_range] = range_value
+
+            # The new range has begun
+            range_value = ''
+            contiguous_range = ()
+
+
+        previous_position = position
+
+    # Add the last range in
+    if range_value:
+        contiguous_ranges[contiguous_range] = range_value
+
+    return contiguous_ranges
 
 
 Bounds = tuple[Position, Position, Position, Position]
