@@ -11,14 +11,13 @@ class Day:
             game_id, matches = self.parse_row(line)
             self.parsed_rows[game_id] =  matches
 
-
     def parse_row(self, line) -> tuple[int, set]:
         game_id, rest = line.split(': ')
         game_id = game_id[5:].strip()
 
         winners, owned = rest.split(' | ')
-        winners = {s.strip() for s in winners.strip().split(' ')} - {''}
-        owned = {s.strip() for s in owned.strip().split(' ')} - {''}
+        winners = {int(s) for s in winners.split()}
+        owned = {int(s) for s in owned.split()}
 
         matches = winners & owned
 
@@ -32,8 +31,6 @@ class Day:
         ])
 
     def run_step_2(self) -> int:
-        game_scores = {}
-
         won_cards = {
             game_id: list(range(game_id + 1, game_id + 1 + len(matches)))
             for game_id, matches in self.parsed_rows.items()
@@ -46,6 +43,7 @@ class Day:
             for card in cards:
                 calculations[game_id].extend(calculations[card])
 
+        # 6,227,972
         return sum(len(v) for v in calculations.values())
 
 
