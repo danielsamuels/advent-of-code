@@ -8,17 +8,14 @@ class Day:
             for row in data.splitlines()
         ]
 
-    def determine_gaps(self, values):
-        return [b - a for a, b in itertools.pairwise(values)]
-
     def extrapolate(self, values, history=None):
         if history is None:
             history = [values]
 
-        gaps = self.determine_gaps(values)
+        gaps = [b - a for a, b in itertools.pairwise(values)]
         history = [*history, gaps]
 
-        if not list(filter(lambda i: i != 0, gaps)):
+        if not any(gaps):
             return history
 
         return self.extrapolate(gaps, history)
