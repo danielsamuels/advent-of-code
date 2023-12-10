@@ -24,7 +24,6 @@ MOVEMENTS = {
 
 class Day:
     def __init__(self, data: str):
-        self._data = data
         self.data = data.splitlines()
         self.width, self.height = len(self.data[0]), len(self.data)
 
@@ -39,7 +38,6 @@ class Day:
         }
         self.grid = parse_grid(data, self.mapping, ignore_dots=True)
         self.path = self.compute_path()
-        self.intersections = {}
 
     def available_directions(self, position: Position):
         return [
@@ -110,9 +108,5 @@ if __name__ == "__main__":
         read_data = f.read()
 
     day = Day(read_data)
-
-    result = day.run_step_1()
-    print(f'Step 1: {result}')
-
-    result_2 = day.run_step_2()
-    print(f'Step 2: {result_2}')
+    print(f'Step 1: {day.run_step_1()}')
+    print(f'Step 2: {day.run_step_2()}')
