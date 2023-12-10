@@ -8,6 +8,7 @@ Grid = dict[Position, str]
 
 # sqrt(tiles / 6) = edge length
 
+
 class Direction(Position, enum.Enum):
     NORTHWEST = (-1, -1)
     NORTH = (0, -1)
@@ -17,6 +18,19 @@ class Direction(Position, enum.Enum):
     SOUTHEAST = (1, 1)
     WEST = (-1, 0)
     EAST = (1, 0)
+
+
+class Connection(tuple[Position], enum.Enum):
+    START = []
+
+    VERTICAL = (Direction.NORTH, Direction.SOUTH)
+    HORIZONTAL = (Direction.EAST, Direction.WEST)
+
+    NORTHEAST = (Direction.SOUTH, Direction.WEST)
+    SOUTHEAST = (Direction.NORTH, Direction.WEST)
+
+    NORTHWEST = (Direction.SOUTH, Direction.EAST)
+    SOUTHWEST = (Direction.NORTH, Direction.EAST)
 
 
 def bridge_points(start: Position, end: Position) -> Generator[Position, None, None]:
@@ -105,11 +119,11 @@ def parse_grid(
     grid = defaultdict(int)
     for y, row in enumerate(data.splitlines()):
         for x, value in enumerate(row):
-            if mapping is not False:
-                value = mapping.get(value, 1)
-
             if value == '.' and ignore_dots:
                 continue
+
+            if mapping is not False:
+                value = mapping.get(value, 1)
 
             if value == DROP:
                 continue
@@ -124,6 +138,7 @@ def relative_points_occupied(grid: dict, position: Position, directions: list[Di
         grid.get(compute_new_position(position, direction), False)
         for direction in directions
     ]
+
 
 def all_relative_point_occupation(grid: dict, position: Position) -> dict[Direction, dict]:
     """From a given point, which directions are occupied?"""
@@ -238,3 +253,9 @@ def dict_grid_to_list(grid: dict) -> list[list[int]]:
         ]
         for y in range(tl_y, br_y + 1)
     ]
+
+
+def all_grid_points(data: list[str]) -> Generator[Position, None, None]:
+    for y, row in enumerate(data):
+        for x, _ in enumerate(row):
+            yield x, y
