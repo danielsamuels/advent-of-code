@@ -101,7 +101,7 @@ def find_in_grid(grid, target, x_hint=None, y_hint=None) -> Position:
 
 
 def parse_grid(
-        data: str,
+        data: [list, str],
         mapping: Optional[bool | dict] = None,
         *,
         ignore_dots: bool = False,
@@ -116,8 +116,11 @@ def parse_grid(
             '#': 1,
         }
 
+    if isinstance(data, str):
+        data = data.splitlines()
+
     grid = defaultdict(int)
-    for y, row in enumerate(data.splitlines()):
+    for y, row in enumerate(data):
         for x, value in enumerate(row):
             if value == '.' and ignore_dots:
                 continue
