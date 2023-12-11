@@ -37,17 +37,52 @@ def bridge_points(start: Position, end: Position) -> Generator[Position, None, N
     start_x, start_y = start
     diff_x, diff_y = tuple(itertools.starmap(lambda a, b: b - a, zip([start_x, start_y], end)))
 
+    if diff_x != 0 and diff_y != 0:
+        step_x = int(diff_x / abs(diff_x))
+        step_y = int(diff_y / abs(diff_y))
+
+        def next_value():
+            range_x = iter(range(start_x, start_x + diff_x + step_x, step_x))
+            range_y = iter(range(start_y, start_y + diff_y + step_y, step_y))
+
+            x, y = start_x, start_y
+            take_x = False
+            while (x, y) != end:
+                if take_x:
+                    try:
+                        x = next(range_x)
+                    except StopIteration:
+                        y = next(range_y)
+
+                else:
+                    try:
+                        y = next(range_y)
+                    except StopIteration:
+                        x = next(range_x)
+
+                take_x = not take_x
+                yield x, y
+
+        return (
+            (new_x, new_y)
+            for new_x, new_y in next_value()
+            if (new_x, new_y) not in [start, end]
+        )
+
     if diff_x != 0:
         step = int(diff_x / abs(diff_x))
         return (
             (new_x, start_y)
             for new_x in range(start_x, start_x + diff_x + step, step)
+            if (new_x, start_y) not in [start, end]
         )
-    elif diff_y != 0:
+
+    if diff_y != 0:
         step = int(diff_y / abs(diff_y))
         return (
             (start_x, new_y)
             for new_y in range(start_y, start_y + diff_y + step, step)
+            if (start_x, new_y) not in [start, end]
         )
 
 
