@@ -109,11 +109,14 @@ def manhattan_distance(point_a, point_b):
     return abs(ax - bx) + abs(ay - by)
 
 
-def print_grid(grid: list[list[int]], *, borders=True):
-    populated_char = '#'
+def print_grid(grid: list[list[int]], *, populated_char=None, borders=True):
+    if populated_char is None:
+        populated_char = '#'
+
+    print()
     for row in grid:
         middle = ''.join(
-            '.' if col is None else populated_char
+            '.' if col is None else populated_char if populated_char else col
             for col in row
         )
         if borders:
