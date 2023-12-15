@@ -1,10 +1,16 @@
 import enum
 import itertools
 from collections import defaultdict
-from typing import Generator, Optional, Union
+from typing import Generator, TypeVar
+from typing import Optional
 
 Position = tuple[int, int]
 Grid = dict[Position, str]
+
+DROP = object()
+WALL = object()
+T = TypeVar('T')
+
 
 # sqrt(tiles / 6) = edge length
 
@@ -49,6 +55,37 @@ def compute_new_position(start: Position, diff: Position) -> Position:
     return start_x + diff_x, start_y + diff_y
 
 
+def move(grid: dict[Position, T], start: Position, direction: Direction) -> Position:
+    # Move a point by diff, wrapping if necessary.
+    # Assume a square grid.
+    px, py = start
+    tl, tr, bl, br = grid_bounds(grid)
+    new_position = compute_new_position(start, direction)
+    new_cell = grid.get(new_position)
+
+    if new_cell is None:
+        return new_position
+
+    # Wrapping!
+    if new_cell == WALL:
+        if direction == Direction.NORTH:
+            # Find the bottom of this column
+            new_position = (px, bl[1])
+        elif direction == Direction.EAST:
+            # Find the left of this row
+            new_position = (tl[0], py)
+        elif direction == Direction.SOUTH:
+            # Find the top of this column
+            new_position = (px, tl[1])
+        elif direction == Direction.WEST:
+            # Find the right of this row
+            new_position = (br[0], py)
+        else:
+            raise Exception(f'Unhandled direction: {direction}')
+
+        return move(grid, new_position, direction)
+
+
 def bridge_diff(start: Position, diff: Position) -> Generator[Position, None, None]:
     end = compute_new_position(start, diff)
     return bridge_points(start, end)
@@ -88,14 +125,12 @@ def find_in_grid(grid, target, x_hint=None, y_hint=None) -> Position:
 
 def parse_grid(
         data: str,
-        mapping: Optional[bool | dict] = None,
+        mapping: Optional[bool | dict[str, T]] = None,
         *,
         ignore_dots: bool = False,
         merge_contiguous: type = None,
-) -> dict:
+) -> dict[Position, T]:
     """Take a string and turn it into a dict"""
-    DROP = object()
-
     if mapping is None:
         mapping = {
             '.': DROP,
@@ -125,6 +160,7 @@ def relative_points_occupied(grid: dict, position: Position, directions: list[Di
         for direction in directions
     ]
 
+
 def all_relative_point_occupation(grid: dict, position: Position) -> dict[Direction, dict]:
     """From a given point, which directions are occupied?"""
     result = {}
@@ -137,6 +173,7 @@ def all_relative_point_occupation(grid: dict, position: Position) -> dict[Direct
             }
 
     return result
+
 
 def get_contiguous_value(grid: Grid, position: Position):
     """From a given position, find the start and end point of a string"""
@@ -153,6 +190,7 @@ def get_contiguous_value(grid: Grid, position: Position):
             result = result + value
 
     return result
+
 
 def get_contiguous_numerical_ranges(grid: Grid):
     contiguous_ranges = {}
@@ -184,7 +222,6 @@ def get_contiguous_numerical_ranges(grid: Grid):
             # The new range has begun
             range_value = ''
             contiguous_range = ()
-
 
         previous_position = position
 

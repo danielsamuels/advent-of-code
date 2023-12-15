@@ -15,12 +15,10 @@ if __name__ == "__main__":
     with open(f'data/{test_filename}.txt', 'r') as f:
         read_data = f.read()
 
-    day = Day(read_data)
-
-    result = day.run_step_1()
+    result = Day(read_data).run_step_1()
     print(f'Step 1: {result}')
 
-    result_2 = day.run_step_2()
+    result_2 = Day(read_data).run_step_2()
     print(f'Step 2: {result_2}')
 
 ```
