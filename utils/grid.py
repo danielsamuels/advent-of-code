@@ -14,6 +14,7 @@ T = TypeVar('T')
 
 # sqrt(tiles / 6) = edge length
 
+
 class Direction(Position, enum.Enum):
     NORTHWEST = (-1, -1)
     NORTH = (0, -1)
@@ -25,21 +26,69 @@ class Direction(Position, enum.Enum):
     EAST = (1, 0)
 
 
+class Connection(tuple[Position], enum.Enum):
+    START = []
+
+    VERTICAL = (Direction.NORTH, Direction.SOUTH)
+    HORIZONTAL = (Direction.EAST, Direction.WEST)
+
+    NORTHEAST = (Direction.SOUTH, Direction.WEST)
+    SOUTHEAST = (Direction.NORTH, Direction.WEST)
+
+    NORTHWEST = (Direction.SOUTH, Direction.EAST)
+    SOUTHWEST = (Direction.NORTH, Direction.EAST)
+
+
 def bridge_points(start: Position, end: Position) -> Generator[Position, None, None]:
     start_x, start_y = start
     diff_x, diff_y = tuple(itertools.starmap(lambda a, b: b - a, zip([start_x, start_y], end)))
+
+    if diff_x != 0 and diff_y != 0:
+        step_x = int(diff_x / abs(diff_x))
+        step_y = int(diff_y / abs(diff_y))
+
+        def next_value():
+            range_x = iter(range(start_x, start_x + diff_x + step_x, step_x))
+            range_y = iter(range(start_y, start_y + diff_y + step_y, step_y))
+
+            x, y = start_x, start_y
+            take_x = False
+            while (x, y) != end:
+                if take_x:
+                    try:
+                        x = next(range_x)
+                    except StopIteration:
+                        y = next(range_y)
+
+                else:
+                    try:
+                        y = next(range_y)
+                    except StopIteration:
+                        x = next(range_x)
+
+                take_x = not take_x
+                yield x, y
+
+        return (
+            (new_x, new_y)
+            for new_x, new_y in next_value()
+            if (new_x, new_y) not in [start, end]
+        )
 
     if diff_x != 0:
         step = int(diff_x / abs(diff_x))
         return (
             (new_x, start_y)
             for new_x in range(start_x, start_x + diff_x + step, step)
+            if (new_x, start_y) not in [start, end]
         )
-    elif diff_y != 0:
+
+    if diff_y != 0:
         step = int(diff_y / abs(diff_y))
         return (
             (start_x, new_y)
             for new_y in range(start_y, start_y + diff_y + step, step)
+            if (start_x, new_y) not in [start, end]
         )
 
 
@@ -97,11 +146,14 @@ def manhattan_distance(point_a, point_b):
     return abs(ax - bx) + abs(ay - by)
 
 
-def print_grid(grid: list[list[int]], *, borders=True):
-    populated_char = '#'
+def print_grid(grid: list[list[int]], *, populated_char=None, borders=True):
+    if populated_char is None:
+        populated_char = '#'
+
+    print()
     for row in grid:
         middle = ''.join(
-            '.' if col is None else populated_char
+            '.' if col is None else populated_char if populated_char else col
             for col in row
         )
         if borders:
@@ -124,7 +176,7 @@ def find_in_grid(grid, target, x_hint=None, y_hint=None) -> Position:
 
 
 def parse_grid(
-        data: str,
+        data: [list, str],
         mapping: Optional[bool | dict[str, T]] = None,
         *,
         ignore_dots: bool = False,
@@ -137,14 +189,17 @@ def parse_grid(
             '#': 1,
         }
 
-    grid = defaultdict(int)
-    for y, row in enumerate(data.splitlines()):
-        for x, value in enumerate(row):
-            if mapping is not False:
-                value = mapping.get(value, 1)
+    if isinstance(data, str):
+        data = data.splitlines()
 
+    grid = defaultdict(int)
+    for y, row in enumerate(data):
+        for x, value in enumerate(row):
             if value == '.' and ignore_dots:
                 continue
+
+            if mapping is not False:
+                value = mapping.get(value, 1)
 
             if value == DROP:
                 continue
@@ -275,3 +330,9 @@ def dict_grid_to_list(grid: dict) -> list[list[int]]:
         ]
         for y in range(tl_y, br_y + 1)
     ]
+
+
+def all_grid_points(data: list[str]) -> Generator[Position, None, None]:
+    for y, row in enumerate(data):
+        for x, _ in enumerate(row):
+            yield x, y
