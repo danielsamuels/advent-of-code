@@ -1,6 +1,3 @@
-from collections import defaultdict
-
-
 class Day:
     def __init__(self, data: str):
         self.data = data.splitlines()
