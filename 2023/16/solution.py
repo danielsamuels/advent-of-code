@@ -3,6 +3,33 @@ from functools import cache
 
 from utils.grid import parse_grid, Connection, Position, Direction, compute_new_position
 
+changes: dict[Direction, dict[Connection, list[Direction]]] = {
+    Direction.NORTH: {
+        Connection.SOUTHEAST: [Direction.EAST],
+        Connection.SOUTHWEST: [Direction.WEST],
+        Connection.HORIZONTAL: [Direction.EAST, Direction.WEST],
+        Connection.VERTICAL: [Direction.NORTH],
+    },
+    Direction.EAST: {
+        Connection.SOUTHEAST: [Direction.NORTH],
+        Connection.SOUTHWEST: [Direction.SOUTH],
+        Connection.HORIZONTAL: [Direction.EAST],
+        Connection.VERTICAL: [Direction.NORTH, Direction.SOUTH],
+    },
+    Direction.SOUTH: {
+        Connection.SOUTHEAST: [Direction.WEST],
+        Connection.SOUTHWEST: [Direction.EAST],
+        Connection.HORIZONTAL: [Direction.EAST, Direction.WEST],
+        Connection.VERTICAL: [Direction.SOUTH],
+    },
+    Direction.WEST: {
+        Connection.SOUTHEAST: [Direction.SOUTH],
+        Connection.SOUTHWEST: [Direction.NORTH],
+        Connection.HORIZONTAL: [Direction.WEST],
+        Connection.VERTICAL: [Direction.NORTH, Direction.SOUTH],
+    },
+}
+
 
 class Grid:
     def __init__(self, data: list[str], start_position: Position, start_direction: Direction):
@@ -30,8 +57,6 @@ class Grid:
             if y < 0 or y > self.grid_height:
                 return
 
-        # print(current_position, direction)
-
         if current_position != self.start_position:
             self.visited_cells.add(current_position)
 
@@ -42,38 +67,8 @@ class Grid:
             # Nothing here, carry on in this direction
             return self.queue.append((next_position, direction))
 
-        # Take care of the passthrough beams first
-        if direction in [Direction.NORTH, Direction.SOUTH] and next_value == Connection.VERTICAL:
-            return self.queue.append((next_position, direction))
-        if direction in [Direction.EAST, Direction.WEST] and next_value == Connection.HORIZONTAL:
-            return self.queue.append((next_position, direction))
-
-        # Then take a look at the change of directions
-        changes = {
-            Direction.NORTH: {Connection.SOUTHEAST: Direction.EAST, Connection.SOUTHWEST: Direction.WEST},
-            Direction.EAST: {Connection.SOUTHEAST: Direction.NORTH, Connection.SOUTHWEST: Direction.SOUTH},
-            Direction.SOUTH: {Connection.SOUTHEAST: Direction.WEST, Connection.SOUTHWEST: Direction.EAST},
-            Direction.WEST: {Connection.SOUTHEAST: Direction.SOUTH, Connection.SOUTHWEST: Direction.NORTH},
-        }
-
-        if next_direction := changes[direction].get(next_value):
-            return self.queue.append((next_position, next_direction))
-
-        # Then look at the splts
-        if direction in [Direction.EAST, Direction.WEST] and next_value == Connection.VERTICAL:
-            # We're splitting the beam!
-            self.queue.append((next_position, Direction.NORTH))
-            self.queue.append((next_position, Direction.SOUTH))
-            return
-        if direction in [Direction.NORTH, Direction.SOUTH] and next_value == Connection.HORIZONTAL:
-            # We're splitting the beam!
-            self.queue.append((next_position, Direction.WEST))
-            self.queue.append((next_position, Direction.EAST))
-            return
-
-        assert next_direction
-
-        return self.queue.append((next_position, next_direction))
+        for direction in changes[direction][next_value]:
+            self.queue.append((next_position, direction))
 
     def exhaust_queue(self):
         while self.queue:
