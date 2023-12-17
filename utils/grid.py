@@ -16,6 +16,7 @@ T = TypeVar('T')
 
 
 class Direction(Position, enum.Enum):
+    NONE = (0, 0)
     NORTHWEST = (-1, -1)
     NORTH = (0, -1)
     NORTHEAST = (1, -1)
