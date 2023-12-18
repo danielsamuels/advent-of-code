@@ -1,7 +1,7 @@
 import enum
 import itertools
-from collections import defaultdict
-from typing import Generator, TypeVar
+from collections import defaultdict, deque
+from typing import Generator, TypeVar, Any
 from typing import Optional
 
 Position = tuple[int, int]
@@ -99,10 +99,10 @@ def bridge_str_points(start: str, end: str) -> Generator[Position, None, None]:
     return bridge_points(start, end)
 
 
-def compute_new_position(start: Position, diff: Position) -> Position:
+def compute_new_position(start: Position, diff: Position, iterations: int = 1) -> Position:
     start_x, start_y = start
     diff_x, diff_y = diff
-    return start_x + diff_x, start_y + diff_y
+    return start_x + (diff_x * iterations), start_y + (diff_y * iterations)
 
 
 def move(grid: dict[Position, T], start: Position, direction: Direction) -> Position:
@@ -231,6 +231,32 @@ def all_relative_point_occupation(grid: dict, position: Position) -> dict[Direct
     return result
 
 
+def cardinal_points(position) -> list[tuple[Direction, Position]]:
+    return [
+        (direction, compute_new_position(position, direction))
+        for direction in [Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST]
+    ]
+
+
+def cardinal_point_occupation(grid: list[list[Any]], position: Position) -> dict[Direction, dict]:
+    result = {}
+    width, height = len(grid[0]), len(grid)
+
+    for direction, position in cardinal_points(position):
+        col, row = position
+        if col < 0 or col >= width:
+            continue
+        if row < 0 or row >= height:
+            continue
+
+        result[direction] = {
+            'position': (col, row),
+            'value': grid[row][col],
+        }
+
+    return result
+
+
 def get_contiguous_value(grid: Grid, position: Position):
     """From a given position, find the start and end point of a string"""
     start_point = position
@@ -322,7 +348,7 @@ def points_within_bounds(grid, bounds: Bounds) -> list[Position]:
     ]
 
 
-def dict_grid_to_list(grid: dict) -> list[list[int]]:
+def dict_grid_to_list(grid: dict) -> list[list[Any]]:
     [tl_x, tl_y], _, _, [br_x, br_y] = grid_bounds(grid)
     return [
         [
@@ -337,3 +363,35 @@ def all_grid_points(data: list[str]) -> Generator[Position, None, None]:
     for y, row in enumerate(data):
         for x, _ in enumerate(row):
             yield x, y
+
+
+def flood_fill(grid: dict | list):
+    # Expand the grid by 1 in all directions
+    if isinstance(grid, dict):
+        grid = dict_grid_to_list(grid)
+
+    width, height = len(grid[0]), len(grid)
+    empty_row = [None] * width
+
+    grid.insert(0, empty_row)
+    grid.append(empty_row)
+    for index, row in enumerate(grid):
+        grid[index] = [None, *row, None]
+
+    width, height = len(grid[0]), len(grid)
+
+    # Start from (0, 0) and fill
+    frontier = deque([(0, 0)])
+    reached = {(0, 0)}
+
+    while frontier:
+        location = frontier.pop()
+        points = cardinal_point_occupation(grid, location).values()
+        for point in points:
+            if point['position'] not in reached and not point['value']:
+                frontier.append(point['position'])
+                reached.add(point['position'])
+
+    # Subtract the flooded space from the overall grid,
+    # leaving the filled area we care about behind
+    return width * height - len(reached)
