@@ -61,7 +61,7 @@ class Day:
         ]
         self.grid = Grid(self.data)
 
-    def find_path(self, minimum_steps=0, maximum_steps=3) -> int:
+    def find_path(self, minimum_steps, maximum_steps) -> int:
         heap = [
             # Current heat index
             # Current position
@@ -119,7 +119,7 @@ class Day:
 
     def run_step_1(self) -> int:
         # 755
-        return self.find_path()
+        return self.find_path(1, 3)
 
     def run_step_2(self) -> int:
         # 881
