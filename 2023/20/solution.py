@@ -37,6 +37,8 @@ class Day:
         self.low_sent = 0
         self.high_sent = 0
         self.log = []
+        self.cache = {}
+
 
     def send_message(self, source, destination, signal):
         self.log.append(f'{source} -{signal}> {destination}')
@@ -49,13 +51,26 @@ class Day:
         self.queue.append(Message(source, destination, signal))
 
     def calculate(self):
+        # At the point of pressing the button, will we enter a known cycle?
+        cache_key = tuple(m[2] for m in self.modules.values())
+        if cache_key in self.cache:
+            print('woo!')
+            return True
+
+        self.cache[cache_key] = {
+            'start_low': self.low_sent,
+            'start_high': self.high_sent,
+        }
+
+        # Clear the log and start the process
         self.log = []
         self.send_message('button', 'broadcaster', 'low')
 
-        cache = {}
-
         while self.queue:
             source, this, signal = self.queue.popleft()
+
+            start_low, start_high = self.low_sent, self.high_sent
+
             kind, dests, curr = self.modules.get(this, (None, [], None))
 
             if this == 'rx' and signal == 'low':
