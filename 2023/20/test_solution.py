@@ -22,4 +22,8 @@ def test_run_step_1_ex1():
 
 
 def test_run_step_1_ex2():
-    assert Day(test_data_2).run_step_1() == 11687500
+    day = Day(test_data_2)
+    without_cache_result = day.run_step_1()
+    assert day.low_sent == 4250
+    assert day.high_sent == 2750
+    assert without_cache_result == 11687500

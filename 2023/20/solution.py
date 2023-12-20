@@ -1,14 +1,15 @@
-from collections import deque, namedtuple, defaultdict
+import math
+from collections import deque, namedtuple
 
 Message = namedtuple('Message', ['source', 'destination', 'signal'])
 
+
 class Day:
     def __init__(self, data: str):
-        modules = {
-            # 'output': (None, [], None),
-        }
+        self.data = data
 
-        for line in data.splitlines():
+        modules = {}
+        for line in self.data.splitlines():
             name, dests = line.split(' -> ')
             dests = dests.split(', ')
             if name == 'broadcaster':
@@ -33,15 +34,22 @@ class Day:
 
         # Update all
         self.modules = modules
+
         self.queue = deque([])
         self.low_sent = 0
         self.high_sent = 0
         self.log = []
-        self.cache = {}
-
+        # These all feed into vr at the end, which goes into rx
+        # Manual, but oh well
+        self.interesting = {
+            'pq': None,
+            'fg': None,
+            'dk': None,
+            'fm': None,
+        }
 
     def send_message(self, source, destination, signal):
-        self.log.append(f'{source} -{signal}> {destination}')
+        # self.log.append(f'{source} -{signal}> {destination}')
 
         if signal == 'low':
             self.low_sent += 1
@@ -50,65 +58,63 @@ class Day:
 
         self.queue.append(Message(source, destination, signal))
 
-    def calculate(self):
-        # At the point of pressing the button, will we enter a known cycle?
-        cache_key = tuple(m[2] for m in self.modules.values())
-        if cache_key in self.cache:
-            print('woo!')
-            return True
+    def handle_signal(self, iteration, source, this, signal):
+        kind, dests, curr = self.modules.get(this, (None, [], None))
 
-        self.cache[cache_key] = {
-            'start_low': self.low_sent,
-            'start_high': self.high_sent,
-        }
+        if kind is None:
+            for dest in dests:
+                self.send_message(this, dest, 'low')
 
-        # Clear the log and start the process
+        if kind == '%':
+            if signal == 'high':
+                return
+
+            self.modules[this] = (kind, dests, not curr)
+            for dest in dests:
+                self.send_message(this, dest, 'low' if curr else 'high')
+
+        if kind == '&':
+            new_value = dict(curr)
+            new_value[source] = signal == 'high'
+
+            if this in self.interesting.keys() and signal == 'low':
+                if self.interesting[this] is None:
+                    self.interesting[this] = iteration
+
+            self.modules[this] = (kind, dests, tuple(new_value.items()))
+            all_high = set(new_value.values()) == {True}
+            for dest in dests:
+                self.send_message(this, dest, 'low' if all_high else 'high')
+
+    def calculate(self, iteration=0):
         self.log = []
         self.send_message('button', 'broadcaster', 'low')
 
         while self.queue:
-            source, this, signal = self.queue.popleft()
+            self.handle_signal(iteration, *self.queue.popleft())
 
-            start_low, start_high = self.low_sent, self.high_sent
-
-            kind, dests, curr = self.modules.get(this, (None, [], None))
-
-            if this == 'rx' and signal == 'low':
-                return True
-
-            if kind is None:
-                for dest in dests:
-                    self.send_message(this, dest, 'low')
-
-            if kind == '%':
-                if signal == 'high':
-                    continue
-
-                self.modules[this] = (kind, dests, not curr)
-                for dest in dests:
-                    self.send_message(this, dest, 'low' if curr else 'high')
-
-            if kind == '&':
-                # Update the value for this input
-                new_value = dict(curr)
-                new_value[source] = signal == 'high'
-                self.modules[this] = (kind, dests, tuple(new_value.items()))
-                all_high = set(new_value.values()) == {True}
-                for dest in dests:
-                    self.send_message(this, dest, 'low' if all_high else 'high')
+        return False, 0
 
     def run_step_1(self) -> int:
         for run in range(1000):
             self.calculate()
-            # print(f'Run {run} log:\n', '\n'.join(self.log), f'High: {self.high_sent}, Low: {self.low_sent}')
-
+            # print(f'Run {run} log:\n', '\n'.join(self.log), f'\nHigh: {self.high_sent}, Low: {self.low_sent}\n\n')
         return self.low_sent * self.high_sent
 
     def run_step_2(self) -> int:
+        # For each of the broadcast outputs, determine their cycle length
+        # Then LCM them!
         run = 0
         while True:
             run += 1
-            if self.calculate():
-                return run
 
-        # return sum(self.calculate(item) for item in self.data)
+            if not any(v is None for v in self.interesting.values()):
+                return math.lcm(*self.interesting.values())
+
+            self.calculate(run)
+
+
+if __name__ == '__main__':
+    from aocd import data
+    print(f'Step 1: {Day(data).run_step_1()}')
+    print(f'Step 2: {Day(data).run_step_2()}')
