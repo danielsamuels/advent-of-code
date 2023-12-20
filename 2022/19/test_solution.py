@@ -12,10 +12,10 @@ def test_run_step_1():
     assert Day(test_data).run_step_1() == 33
 
 
-@pytest.mark.parametrize('blueprint, expectation', zip(test_data.splitlines(), [9, 12]))
+@pytest.mark.parametrize('blueprint, expectation', zip(test_data.splitlines(), [9, 24]))
 def test_step_1_individually(blueprint, expectation):
     assert Day(blueprint).run_step_1() == expectation
 
 
 def test_run_step_2():
-    assert Day(test_data).run_step_2() == 0
+    assert Day(test_data).run_step_2() == 56 * 62
