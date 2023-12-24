@@ -1,7 +1,7 @@
 import enum
 import itertools
 from collections import defaultdict, deque
-from typing import Generator, TypeVar, Any
+from typing import Generator, TypeVar, Any, Collection
 from typing import Optional
 
 Position = tuple[int, int]
@@ -181,9 +181,12 @@ def parse_grid(
         mapping: Optional[bool | dict[str, T]] = None,
         *,
         ignore_dots: bool = False,
+        add_index: bool = False,
         merge_contiguous: type = None,
-) -> dict[Position, T]:
+) -> dict[Position, Any]:
     """Take a string and turn it into a dict"""
+    index = 0
+
     if mapping is None:
         mapping = {
             '.': DROP,
@@ -194,6 +197,7 @@ def parse_grid(
         data = data.splitlines()
 
     grid = defaultdict(int)
+
     for y, row in enumerate(data):
         for x, value in enumerate(row):
             if value == '.' and ignore_dots:
@@ -205,9 +209,16 @@ def parse_grid(
             if value == DROP:
                 continue
 
+            if add_index:
+                index += 1
+                value = {
+                    'index': index,
+                    'value': value,
+                }
+
             grid[(x, y)] = value
 
-    return grid
+    return dict(grid)
 
 
 def relative_points_occupied(grid: dict, position: Position, directions: list[Direction]) -> list[bool]:
@@ -238,7 +249,7 @@ def cardinal_points(position) -> list[tuple[Direction, Position]]:
     ]
 
 
-def cardinal_point_occupation(grid: list[list[Any]], position: Position) -> dict[Direction, dict]:
+def cardinal_point_occupation(grid: Collection[Collection[Any]], position: Position) -> dict[Direction, dict]:
     result = {}
     width, height = len(grid[0]), len(grid)
 
@@ -249,10 +260,11 @@ def cardinal_point_occupation(grid: list[list[Any]], position: Position) -> dict
         if row < 0 or row >= height:
             continue
 
-        result[direction] = {
-            'position': (col, row),
-            'value': grid[row][col],
-        }
+        if grid[row][col]:
+            result[direction] = {
+                'position': (col, row),
+                'value': grid[row][col],
+            }
 
     return result
 
@@ -348,8 +360,12 @@ def points_within_bounds(grid, bounds: Bounds) -> list[Position]:
     ]
 
 
-def dict_grid_to_list(grid: dict) -> list[list[Any]]:
-    [tl_x, tl_y], _, _, [br_x, br_y] = grid_bounds(grid)
+def dict_grid_to_list(grid: dict, grid_width: int = None, grid_height: int = None) -> list[list[Any]]:
+    if grid_width and grid_height:
+        tl_x, tl_y = (0, 0)
+        br_x, br_y = (grid_width - 1, grid_height - 1)
+    else:
+        [tl_x, tl_y], _, _, [br_x, br_y] = grid_bounds(grid)
     return [
         [
             grid.get((x, y), None)
