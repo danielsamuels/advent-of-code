@@ -2,8 +2,9 @@ import heapq
 import math
 from collections import deque
 
-from utils.dijkstra import Graph, dijkstra, neighbours
-from utils.grid import parse_grid, Direction, DROP, cardinal_point_occupation, dict_grid_to_list, compute_new_position
+from utils.dijkstra import Graph, dijkstra, neighbours, SparseGraph
+from utils.grid import parse_grid, Direction, DROP, cardinal_point_occupation, dict_grid_to_list, compute_new_position, \
+    print_sparse_grid
 
 
 class Day:
@@ -11,7 +12,7 @@ class Day:
     grid_width: int
     grid_height: int
 
-    graph: Graph
+    graph: Graph | SparseGraph
 
     def __init__(self, data: str):
         self.data = data.splitlines()
@@ -144,10 +145,65 @@ class Day:
         self.setup(False)
         return self.find_longest_route()
 
+    def find_longest_route_2(self) -> int:
+        print('Finding longest route')
+        start_position = (1, 0)
+        dest = (self.grid_width - 2, self.grid_height - 1)
+
+        heap = [
+            # Distance travelled, current position, visited
+            (0, start_position, []),
+        ]
+        high_score = 0
+
+        while heap:
+            score, position, visited = heapq.heappop(heap)
+
+            print(f'Heap size is {len(heap)}, current history size: {len(visited)}')
+
+            if position != start_position:
+                assert visited
+
+            if position == dest:
+                print_sparse_grid(visited)
+                new_score = abs(score)
+                if new_score > high_score:
+                    print(f'New score of {new_score} beats current {high_score}')
+                    high_score = max(new_score, high_score)
+
+                continue
+
+            # Where can we go from here?
+            for new_pos, weight in self.graph.edges[position].items():
+                if new_pos not in visited:
+                    heapq.heappush(heap, (score - weight, new_pos, [*visited, position]))
+
+        return high_score
+
     def run_step_2(self) -> int:
-        self.setup(True)
+        self.grid_width, self.grid_height = len(self.data[0]), len(self.data)
+        self.graph = SparseGraph()
+
+        # Work our way through the input data and build up the edges
+        for col in range(self.grid_width):
+            for row in range(self.grid_height):
+                # Read the cell plus cardinal values
+                if self.data[row][col] == '#':
+                    # There will be no links from this cell
+                    continue
+
+                current_position = (col, row)
+                neighbours = cardinal_point_occupation(self.data, current_position)
+                for neighbour in neighbours.values():
+                    self.graph.add_two_way_edge(current_position, neighbour['position'])
+
+        # Simplify the grid to reduce number of steps required later
+        print('reducing')
+        self.graph.simplify_edges()
+
         # 6534
-        return self.find_longest_route()
+        print('routing')
+        return self.find_longest_route_2()
 
 
 if __name__ == '__main__':

@@ -92,6 +92,8 @@ def bridge_points(start: Position, end: Position) -> Generator[Position, None, N
             if (start_x, new_y) not in [start, end]
         )
 
+    return ((x, y) for x, y in [])
+
 
 def bridge_str_points(start: str, end: str) -> Generator[Position, None, None]:
     input_points = (start, end)
@@ -219,6 +221,21 @@ def parse_grid(
             grid[(x, y)] = value
 
     return dict(grid)
+
+
+def print_sparse_grid(points: list[Position]):
+    """Given a list of positions, plot them on a map, filling in any gaps"""
+    occupied_points = points
+    for a, b in itertools.pairwise(points):
+        for point in bridge_points(a, b):
+            occupied_points.append(point)
+
+    max_col = max_row = 0
+    for col, row in occupied_points:
+        max_col = max(col, max_col)
+        max_row = max(row, max_row)
+
+    print(occupied_points)
 
 
 def relative_points_occupied(grid: dict, position: Position, directions: list[Direction]) -> list[bool]:
