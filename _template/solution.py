@@ -2,7 +2,7 @@ class Day:
     def __init__(self, data: str):
         self.data = data.splitlines()
 
-    def calculate(self, item):
+    def calculate(self, item) -> int:
         return 0
 
     def run_step_1(self) -> int:
