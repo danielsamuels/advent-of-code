@@ -6,7 +6,7 @@ DAY=$(date +%-d)
 DIRNAME="$YEAR/$DAY"
 
 if [[ ! -d "$DIRNAME" ]]; then
-  cp _template "DIRNAME"
+  cp -r _template "$DIRNAME"
 fi
 
-aoc -r -y "$YEAR" -d "$DAY"
+aoc -r -y "$YEAR" -d "$DAY" "$@"
