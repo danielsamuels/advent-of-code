@@ -1,7 +1,7 @@
 import enum
 import itertools
 from collections import defaultdict, deque
-from typing import Generator, TypeVar, Any, Collection
+from typing import Generator, TypeVar, Any, Collection, Literal
 from typing import Optional
 
 Position = tuple[int, int]
@@ -428,3 +428,15 @@ def flood_fill(grid: dict | list):
     # Subtract the flooded space from the overall grid,
     # leaving the filled area we care about behind
     return width * height - len(reached)
+
+
+def rotate_direction(current_direction, rotation: Literal['cw'] | Literal['ccw']) -> Direction:
+    if rotation == 'cw':
+        if current_direction == Direction.NORTH:
+            return Direction.EAST
+        elif current_direction == Direction.EAST:
+            return Direction.SOUTH
+        elif current_direction == Direction.SOUTH:
+            return Direction.WEST
+        elif current_direction == Direction.WEST:
+            return Direction.NORTH
