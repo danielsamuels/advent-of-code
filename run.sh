@@ -7,6 +7,7 @@ DIRNAME="$YEAR/$DAY"
 
 if [[ ! -d "$DIRNAME" ]]; then
   cp -r _template "$DIRNAME"
+  exit 0
 fi
 
 aoc -r -y "$YEAR" -d "$DAY" "$@"
