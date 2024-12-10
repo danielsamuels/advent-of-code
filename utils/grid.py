@@ -1,5 +1,6 @@
 import enum
 import itertools
+import typing
 from collections import defaultdict, deque
 from typing import Generator, TypeVar, Any, Collection, Literal
 from typing import Optional
@@ -165,7 +166,15 @@ def print_grid(grid: list[list[int]], *, populated_char=None, borders=True):
             print(middle)
 
 
-def find_in_grid(grid, target, x_hint=None, y_hint=None) -> Position:
+@typing.overload
+def find_in_grid(grid, target, multiple=True) -> Generator[Position, None, None]: ...
+
+
+@typing.overload
+def find_in_grid(grid, target, multiple=False) -> Position: ...
+
+
+def find_in_grid(grid: list[list[T]], target: T, x_hint=None, y_hint=None, multiple=False):
     for y, row in enumerate(grid):
         if y_hint is not None and y != y_hint:
             continue
@@ -175,7 +184,10 @@ def find_in_grid(grid, target, x_hint=None, y_hint=None) -> Position:
                 continue
 
             if cell == target:
-                return x, y
+                if multiple:
+                    yield x, y
+                else:
+                    return x, y
 
 
 def parse_grid(
