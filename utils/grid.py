@@ -171,16 +171,32 @@ def print_grid(grid: list[list[int]], *, populated_char=None, borders=True):
 
 
 @typing.overload
-def find_in_grid(grid, target, multiple=True) -> Generator[Position, None, None]: ...
+def find_in_grid(
+    grid,
+    target,
+    x_hint: int | None,
+    y_hint: int | None,
+    multiple: Literal[True],
+) -> Generator[Position, None, None]: ...
 
 
 @typing.overload
-def find_in_grid(grid, target, multiple=False) -> Position: ...
+def find_in_grid(
+    grid,
+    target,
+    x_hint: int | None,
+    y_hint: int | None,
+    multiple: Literal[False],
+) -> Position: ...
 
 
 def find_in_grid(
-    grid: list[list[T]], target: T, x_hint=None, y_hint=None, multiple=False
-):
+    grid: list[list[T]],
+    target: T,
+    x_hint: int | None = None,
+    y_hint: int | None = None,
+    multiple: bool = False,
+) -> Position | Generator[Position, None, None]:
     for y, row in enumerate(grid):
         if y_hint is not None and y != y_hint:
             continue
