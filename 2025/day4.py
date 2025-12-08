@@ -1,11 +1,3 @@
-# /// script
-# requires-python = ">=3.13"
-# dependencies = [
-#     "advent-of-code-data",
-# ]
-# ///
-
-from pprint import pprint
 from aocd import data, submit
 
 from utils.grid import Direction, Position, all_relative_point_occupation, parse_grid
