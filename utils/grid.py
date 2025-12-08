@@ -10,7 +10,7 @@ Grid = dict[Position, str]
 
 DROP = object()
 WALL = object()
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 # sqrt(tiles / 6) = edge length
@@ -43,7 +43,9 @@ class Connection(tuple[Position], enum.Enum):
 
 def bridge_points(start: Position, end: Position) -> Generator[Position, None, None]:
     start_x, start_y = start
-    diff_x, diff_y = tuple(itertools.starmap(lambda a, b: b - a, zip([start_x, start_y], end)))
+    diff_x, diff_y = tuple(
+        itertools.starmap(lambda a, b: b - a, zip([start_x, start_y], end))
+    )
 
     if diff_x != 0 and diff_y != 0:
         step_x = int(diff_x / abs(diff_x))
@@ -98,11 +100,13 @@ def bridge_points(start: Position, end: Position) -> Generator[Position, None, N
 
 def bridge_str_points(start: str, end: str) -> Generator[Position, None, None]:
     input_points = (start, end)
-    start, end = [tuple(map(int, point.split(','))) for point in input_points]
+    start, end = [tuple(map(int, point.split(","))) for point in input_points]
     return bridge_points(start, end)
 
 
-def compute_new_position(start: Position, diff: Position, iterations: int = 1) -> Position:
+def compute_new_position(
+    start: Position, diff: Position, iterations: int = 1
+) -> Position:
     start_x, start_y = start
     diff_x, diff_y = diff
     return start_x + (diff_x * iterations), start_y + (diff_y * iterations)
@@ -134,7 +138,7 @@ def move(grid: dict[Position, T], start: Position, direction: Direction) -> Posi
             # Find the right of this row
             new_position = (br[0], py)
         else:
-            raise Exception(f'Unhandled direction: {direction}')
+            raise Exception(f"Unhandled direction: {direction}")
 
         return move(grid, new_position, direction)
 
@@ -152,16 +156,16 @@ def manhattan_distance(point_a, point_b):
 
 def print_grid(grid: list[list[int]], *, populated_char=None, borders=True):
     if populated_char is None:
-        populated_char = '#'
+        populated_char = "#"
 
     print()
     for row in grid:
-        middle = ''.join(
-            '.' if col is None else populated_char if populated_char else col
+        middle = "".join(
+            "." if col is None else populated_char if populated_char else col
             for col in row
         )
         if borders:
-            print('|', middle, '|')
+            print("|", middle, "|")
         else:
             print(middle)
 
@@ -174,7 +178,9 @@ def find_in_grid(grid, target, multiple=True) -> Generator[Position, None, None]
 def find_in_grid(grid, target, multiple=False) -> Position: ...
 
 
-def find_in_grid(grid: list[list[T]], target: T, x_hint=None, y_hint=None, multiple=False):
+def find_in_grid(
+    grid: list[list[T]], target: T, x_hint=None, y_hint=None, multiple=False
+):
     for y, row in enumerate(grid):
         if y_hint is not None and y != y_hint:
             continue
@@ -191,20 +197,19 @@ def find_in_grid(grid: list[list[T]], target: T, x_hint=None, y_hint=None, multi
 
 
 def parse_grid(
-        data: [list, str],
-        mapping: Optional[bool | dict[str, T]] = None,
-        *,
-        ignore_dots: bool = False,
-        add_index: bool = False,
-        merge_contiguous: type = None,
+    data: list | str,
+    mapping: Optional[bool | dict[str, T]] = None,
+    *,
+    ignore_dots: bool = False,
+    add_index: bool = False,
 ) -> dict[Position, Any]:
     """Take a string and turn it into a dict"""
     index = 0
 
     if mapping is None:
         mapping = {
-            '.': DROP,
-            '#': 1,
+            ".": DROP,
+            "#": 1,
         }
 
     if isinstance(data, str):
@@ -214,7 +219,7 @@ def parse_grid(
 
     for y, row in enumerate(data):
         for x, value in enumerate(row):
-            if value == '.' and ignore_dots:
+            if value == "." and ignore_dots:
                 continue
 
             if mapping is not False:
@@ -226,8 +231,8 @@ def parse_grid(
             if add_index:
                 index += 1
                 value = {
-                    'index': index,
-                    'value': value,
+                    "index": index,
+                    "value": value,
                 }
 
             grid[(x, y)] = value
@@ -250,23 +255,24 @@ def print_sparse_grid(points: list[Position]):
     print(occupied_points)
 
 
-def relative_points_occupied(grid: dict, position: Position, directions: list[Direction]) -> list[bool]:
+def relative_points_occupied(
+    grid: dict, position: Position, directions: list[Direction]
+) -> list[bool]:
     return [
         grid.get(compute_new_position(position, direction), False)
         for direction in directions
     ]
 
 
-def all_relative_point_occupation(grid: dict, position: Position) -> dict[Direction, dict]:
+def all_relative_point_occupation(
+    grid: dict, position: Position
+) -> dict[Direction, dict]:
     """From a given point, which directions are occupied?"""
     result = {}
     for direction in Direction:
         point = compute_new_position(position, direction)
         if point_val := grid.get(point):
-            result[direction] = {
-                'position': point,
-                'value': point_val
-            }
+            result[direction] = {"position": point, "value": point_val}
 
     return result
 
@@ -274,11 +280,18 @@ def all_relative_point_occupation(grid: dict, position: Position) -> dict[Direct
 def cardinal_points(position) -> list[tuple[Direction, Position]]:
     return [
         (direction, compute_new_position(position, direction))
-        for direction in [Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST]
+        for direction in [
+            Direction.NORTH,
+            Direction.EAST,
+            Direction.SOUTH,
+            Direction.WEST,
+        ]
     ]
 
 
-def cardinal_point_occupation(grid: Collection[Collection[Any]], position: Position) -> dict[Direction, dict]:
+def cardinal_point_occupation(
+    grid: Collection[Collection[Any]], position: Position
+) -> dict[Direction, dict]:
     result = {}
     width, height = len(grid[0]), len(grid)
 
@@ -291,8 +304,8 @@ def cardinal_point_occupation(grid: Collection[Collection[Any]], position: Posit
 
         if grid[row][col]:
             result[direction] = {
-                'position': (col, row),
-                'value': grid[row][col],
+                "position": (col, row),
+                "value": grid[row][col],
             }
 
     return result
@@ -303,12 +316,16 @@ def get_contiguous_value(grid: Grid, position: Position):
     start_point = position
     result = grid.get(start_point)
 
-    while (position := compute_new_position(position, Direction.WEST)) and (value := grid.get(position)):
+    while (position := compute_new_position(position, Direction.WEST)) and (
+        value := grid.get(position)
+    ):
         if value.isdigit():
             result = value + result
 
     position = start_point
-    while (position := compute_new_position(position, Direction.EAST)) and (value := grid.get(position)):
+    while (position := compute_new_position(position, Direction.EAST)) and (
+        value := grid.get(position)
+    ):
         if value.isdigit():
             result = result + value
 
@@ -318,7 +335,7 @@ def get_contiguous_value(grid: Grid, position: Position):
 def get_contiguous_numerical_ranges(grid: Grid):
     contiguous_ranges = {}
 
-    range_value = ''
+    range_value = ""
     contiguous_range = ()
     previous_position = None
 
@@ -331,7 +348,7 @@ def get_contiguous_numerical_ranges(grid: Grid):
                 contiguous_ranges[contiguous_range] = range_value
 
             # The new range has begun
-            range_value = ''
+            range_value = ""
             contiguous_range = ()
 
         if value.isdigit():
@@ -343,7 +360,7 @@ def get_contiguous_numerical_ranges(grid: Grid):
                 contiguous_ranges[contiguous_range] = range_value
 
             # The new range has begun
-            range_value = ''
+            range_value = ""
             contiguous_range = ()
 
         previous_position = position
@@ -383,23 +400,20 @@ def point_within_bounds(position: Position, bounds: Bounds) -> bool:
 
 def points_within_bounds(grid, bounds: Bounds) -> list[Position]:
     return [
-        position
-        for position in grid.keys()
-        if point_within_bounds(position, bounds)
+        position for position in grid.keys() if point_within_bounds(position, bounds)
     ]
 
 
-def dict_grid_to_list(grid: dict, grid_width: int = None, grid_height: int = None) -> list[list[Any]]:
+def dict_grid_to_list(
+    grid: dict, grid_width: int = None, grid_height: int = None
+) -> list[list[Any]]:
     if grid_width and grid_height:
         tl_x, tl_y = (0, 0)
         br_x, br_y = (grid_width - 1, grid_height - 1)
     else:
         [tl_x, tl_y], _, _, [br_x, br_y] = grid_bounds(grid)
     return [
-        [
-            grid.get((x, y), None)
-            for x in range(tl_x, br_x + 1)
-        ]
+        [grid.get((x, y), None) for x in range(tl_x, br_x + 1)]
         for y in range(tl_y, br_y + 1)
     ]
 
@@ -433,17 +447,19 @@ def flood_fill(grid: dict | list):
         location = frontier.pop()
         points = cardinal_point_occupation(grid, location).values()
         for point in points:
-            if point['position'] not in reached and not point['value']:
-                frontier.append(point['position'])
-                reached.add(point['position'])
+            if point["position"] not in reached and not point["value"]:
+                frontier.append(point["position"])
+                reached.add(point["position"])
 
     # Subtract the flooded space from the overall grid,
     # leaving the filled area we care about behind
     return width * height - len(reached)
 
 
-def rotate_direction(current_direction, rotation: Literal['cw'] | Literal['ccw']) -> Direction:
-    if rotation == 'cw':
+def rotate_direction(
+    current_direction, rotation: Literal["cw"] | Literal["ccw"]
+) -> Direction:
+    if rotation == "cw":
         if current_direction == Direction.NORTH:
             return Direction.EAST
         elif current_direction == Direction.EAST:
