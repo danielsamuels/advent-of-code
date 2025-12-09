@@ -1,10 +1,12 @@
 import enum
 import itertools
 from collections import defaultdict, deque
-from typing import Generator, TypeVar, Any, Collection, Literal
+import math
+from typing import Generator, TypeVar, Any, Collection, Literal, overload
 from typing import Optional
 
 Position = tuple[int, int]
+Position3D = tuple[int, int, int]
 Grid = dict[Position, str]
 
 DROP = object()
@@ -150,6 +152,23 @@ def manhattan_distance(point_a, point_b):
     # Calculate the manhattan distance
     [ax, ay], [bx, by] = point_a, point_b
     return abs(ax - bx) + abs(ay - by)
+
+
+P = TypeVar("P", Position, Position3D)
+
+
+def euclidean_distance(p: P, q: P) -> float:
+    dimensions = len(p)
+
+    # https://en.wikipedia.org/wiki/Euclidean_distance#Two_dimensions
+    if dimensions == 2:
+        return math.sqrt((p[0] - q[0]) ** 2 + (p[1] - q[1]) ** 2)
+
+    # https://en.wikipedia.org/wiki/Euclidean_distance#Higher_dimensions
+    elif dimensions == 3:
+        return math.sqrt((p[0] - q[0]) ** 2 + (p[1] - q[1]) ** 2 + (p[2] - q[2]) ** 2)
+
+    raise ValueError(f"Invalid positions provided, wrong number for {dimensions=}")
 
 
 def print_grid(grid: list[list[int]], *, populated_char=None, borders=True):
