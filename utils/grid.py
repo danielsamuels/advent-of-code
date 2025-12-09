@@ -119,9 +119,6 @@ def move(grid: dict[Position, T], start: Position, direction: Direction) -> Posi
     new_position = compute_new_position(start, direction)
     new_cell = grid.get(new_position)
 
-    if new_cell is None:
-        return new_position
-
     # Wrapping!
     if new_cell == WALL:
         if direction == Direction.NORTH:
@@ -140,6 +137,8 @@ def move(grid: dict[Position, T], start: Position, direction: Direction) -> Posi
             raise Exception(f"Unhandled direction: {direction}")
 
         return move(grid, new_position, direction)
+
+    return new_position
 
 
 def bridge_diff(start: Position, diff: Position) -> Generator[Position, None, None]:
@@ -177,7 +176,6 @@ def find_in_grid(
     y_hint: int | None = None,
     multiple: bool = False,
 ) -> Generator[Position, None, None]:
-    print(f"{multiple=}")
     for y, row in enumerate(grid):
         if y_hint is not None and y != y_hint:
             continue
