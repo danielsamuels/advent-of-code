@@ -60,63 +60,26 @@ def part_1():
     submit(p1_result, part="a")
 
 
-@cache
-def process_path(
-    path: tuple[int],
-    next_row_index: int,
-    rows: tuple[str],
-) -> list[tuple[int]]:
-    row_width = len(rows[0])
-    partial_paths = []
-
-    # If we're continuing on, look at the value of the next row in the same column index
-    column_index = path[-1]
-    next_value = rows[next_row_index][column_index]
-
-    if next_value == ".":
-        partial_paths.append((*path, column_index))
-    elif next_value == "^":
-        if column_index > 0:
-            partial_paths.append((*path, column_index - 1))
-
-        if column_index < row_width:
-            partial_paths.append((*path, column_index + 1))
-
-    return partial_paths
-
-
 def part_2():
-    rows = tuple(data.splitlines())
+    rows = data.splitlines()
+    counts = [0] * len(rows[0])
 
-    total_rows = len(rows)
+    for row in rows:
+        for index, value in enumerate(row):
+            if value == "S":
+                counts[index] += 1
+            if value == "^":
+                counts[index - 1] += counts[index]
+                counts[index + 1] += counts[index]
+                counts[index] = 0
 
-    # Start with a single path, we'll add more as we go through
-    partial_paths = collections.deque([(rows[0].index("S"),)])
-    completed_paths = []
-
-    while partial_paths:
-        path = partial_paths.pop()
-        print(
-            f"Working on {path=} ({len(path)}/{total_rows}). {len(partial_paths):,} left to do"
-        )
-
-        # If we've reached the bottom, there's nothing left to do
-        next_row_index = len(path)
-        if next_row_index == total_rows:
-            print(f"Completed path: {path=}")
-            completed_paths.append(path)
-            continue
-
-        new_partial_paths = process_path(path, next_row_index, rows)
-        partial_paths.extend(new_partial_paths)
-
-    p2_result = len(completed_paths)
+    p2_result = sum(counts)
     print(f"{p2_result=}")
-    # submit(p2_result, part="b")
+    submit(p2_result, part="b")
 
 
 def main() -> None:
-    # part_1()
+    part_1()
     part_2()
 
 
