@@ -336,6 +336,29 @@ def cardinal_point_occupation(
     return result
 
 
+def cardinal_point_occupation_dict(
+    grid: dict[Position, Any], position: Position, *, allow_empty=False
+) -> dict[Direction, dict]:
+    *_, [br_x, br_y] = grid_bounds(grid)
+    width, height = br_x + 1, br_y + 1
+    result = {}
+
+    for direction, position in cardinal_points(position):
+        col, row = position
+        if col < 0 or col >= width:
+            continue
+        if row < 0 or row >= height:
+            continue
+
+        if (value := grid.get(position)) or allow_empty:
+            result[direction] = {
+                "position": position,
+                "value": value,
+            }
+
+    return result
+
+
 def get_contiguous_value(grid: Grid, position: Position):
     """From a given position, find the start and end point of a string"""
     start_point = position
