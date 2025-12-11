@@ -483,14 +483,26 @@ def all_grid_points(data: list[str]) -> Generator[Position, None, None]:
             yield x, y
 
 
-def flood_fill(grid: dict | list):
-    # Expand the grid by 1 in all directions
-    if isinstance(grid, dict):
-        grid = dict_grid_to_list(grid)
+class FloodFill(enum.Enum):
+    AREA = enum.auto()
+    REACHED = enum.auto()
 
+
+@overload
+def flood_fill(
+    grid: list, return_type: Literal[FloodFill.REACHED]
+) -> set[Position]: ...
+
+
+@overload
+def flood_fill(grid: list, return_type: Literal[FloodFill.AREA]) -> int: ...
+
+
+def flood_fill(grid: list, return_type: FloodFill = FloodFill.AREA):
     width, height = len(grid[0]), len(grid)
-    empty_row = [None] * width
 
+    # Expand the grid by 1 in all directions
+    empty_row = [None] * width
     grid.insert(0, empty_row)
     grid.append(empty_row)
     for index, row in enumerate(grid):
@@ -500,19 +512,86 @@ def flood_fill(grid: dict | list):
 
     # Start from (0, 0) and fill
     frontier = deque([(0, 0)])
-    reached = {(0, 0)}
+    reached: set[Position] = {(0, 0)}
 
     while frontier:
         location = frontier.pop()
-        points = cardinal_point_occupation(grid, location).values()
+        points = cardinal_point_occupation(grid, location, allow_empty=True).values()
         for point in points:
             if point["position"] not in reached and not point["value"]:
                 frontier.append(point["position"])
                 reached.add(point["position"])
 
-    # Subtract the flooded space from the overall grid,
-    # leaving the filled area we care about behind
-    return width * height - len(reached)
+    if return_type == FloodFill.AREA:
+        # Subtract the flooded space from the overall grid,
+        # leaving the filled area we care about behind
+        return width * height - len(reached)
+
+    if return_type == FloodFill.REACHED:
+        # Avoid an easy trap whereby the positions returned are not
+        # the same as they would be on the original grid.
+        # Subtract one from both the x and y parameters for each position reached.
+        return {(x - 1, y - 1) for x, y, in reached if x > 0 and y > 0}
+
+
+@overload
+def flood_fill_dict(
+    grid: dict, return_type: Literal[FloodFill.REACHED], *, width: int, height: int
+) -> set[Position]: ...
+
+
+@overload
+def flood_fill_dict(
+    grid: dict, return_type: Literal[FloodFill.AREA], *, width: int, height: int
+) -> int: ...
+
+
+def flood_fill_dict(
+    grid: dict,
+    return_type: FloodFill = FloodFill.AREA,
+    *,
+    width: int = None,
+    height: int = None,
+):
+    if not width or not height:
+        *_, [br_x, br_y] = grid_bounds(grid)
+        width, height = br_x + 1, br_y + 1
+
+    # Expand the grid by 1 in all directions to ensure (0, 0) is empty
+    # expanded_grid = {(x + 1, y + 1): value for [x, y], value in grid.items()}
+    #
+    # print(f"Grid has {width=}, {height=}")
+    # assert (width, height) not in expanded_grid
+    # expanded_grid[(width, height)] = None
+
+    # Start from (0, 0) and fill
+    frontier = deque([(0, 0)])
+    reached: set[Position] = {(0, 0)}
+
+    print("Starting flood fill")
+    while frontier:
+        location = frontier.pop()
+
+        points = cardinal_point_occupation_dict(
+            grid, location, allow_empty=True
+        ).values()
+
+        for point in points:
+            if point["position"] not in reached and not point["value"]:
+                frontier.append(point["position"])
+                reached.add(point["position"])
+
+    if return_type == FloodFill.AREA:
+        # Subtract the flooded space from the overall grid,
+        # leaving the filled area we care about behind
+        return width * height - len(reached)
+
+    if return_type == FloodFill.REACHED:
+        # Avoid an easy trap whereby the positions returned are not
+        # the same as they would be on the original grid.
+        # Subtract one from both the x and y parameters for each position reached.
+        print("Returning from `flood_fill_dict`")
+        return {(x - 1, y - 1) for x, y, in reached if x > 0 and y > 0}
 
 
 def rotate_direction(
