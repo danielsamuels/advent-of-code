@@ -254,19 +254,30 @@ def parse_grid(
     return dict(grid)
 
 
-def print_sparse_grid(points: list[Position]):
+def print_sparse_grid(grid: Grid):
     """Given a list of positions, plot them on a map, filling in any gaps"""
-    occupied_points = points
-    for a, b in itertools.pairwise(points):
-        for point in bridge_points(a, b):
-            occupied_points.append(point)
+    print()
 
-    max_col = max_row = 0
-    for col, row in occupied_points:
-        max_col = max(col, max_col)
-        max_row = max(row, max_row)
+    *_, br = grid_bounds(grid)
+    x_key_len = len(str(br[0]))
+    y_key_len = len(str(br[1])) + 1
 
-    print(occupied_points)
+    str_grid = "\n".join(
+        [
+            str(row).rjust(y_key_len - 1).ljust(y_key_len)
+            + "".join([grid.get((col, row), ".") for col in range(0, br[0] + 1)])
+            for row in range(0, br[1] + 1)
+        ]
+    )
+
+    x_number_strs = [str(i).rjust(x_key_len).ljust(x_key_len) for i in range(br[0] + 1)]
+
+    # Output an x-key
+    for row in range(x_key_len):
+        print("".ljust(y_key_len) + "".join(num[row] for num in x_number_strs))
+
+    print(str_grid)
+    print()
 
 
 def relative_points_occupied(
