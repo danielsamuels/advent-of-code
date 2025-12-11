@@ -1,7 +1,7 @@
 import enum
 import itertools
-from collections import defaultdict, deque
 import math
+from collections import defaultdict, deque
 from typing import Generator, TypeVar, Any, Collection, Literal, overload
 from typing import Optional
 
@@ -29,6 +29,13 @@ class Direction(Position, enum.Enum):
     EAST = (1, 0)
 
 
+class CardinalDirection(Position, enum.Enum):
+    NORTH = (0, -1)
+    EAST = (1, 0)
+    SOUTH = (0, 1)
+    WEST = (-1, 0)
+
+
 class Connection(tuple[Position], enum.Enum):
     START = []
 
@@ -47,7 +54,6 @@ def bridge_points(start: Position, end: Position) -> Generator[Position, None, N
     diff_x, diff_y = tuple(
         itertools.starmap(lambda a, b: b - a, zip([start_x, start_y], end))
     )
-
     if diff_x != 0 and diff_y != 0:
         step_x = int(diff_x / abs(diff_x))
         step_y = int(diff_y / abs(diff_y))
@@ -326,7 +332,7 @@ def cardinal_points(position) -> list[tuple[Direction, Position]]:
 
 
 def cardinal_point_occupation(
-    grid: Collection[Collection[Any]], position: Position
+    grid: Collection[Collection[Any]], position: Position, *, allow_empty=False
 ) -> dict[Direction, dict]:
     result = {}
     width, height = len(grid[0]), len(grid)
@@ -338,7 +344,7 @@ def cardinal_point_occupation(
         if row < 0 or row >= height:
             continue
 
-        if grid[row][col]:
+        if grid[row][col] or allow_empty:
             result[direction] = {
                 "position": (col, row),
                 "value": grid[row][col],
@@ -434,7 +440,7 @@ def get_contiguous_numerical_ranges(grid: Grid):
 Bounds = tuple[Position, Position, Position, Position]
 
 
-def grid_bounds(grid: dict[Position, int]) -> Bounds:
+def grid_bounds(grid: dict[Position, Any]) -> Bounds:
     """Returns top left, top right, bottom left, bottom right"""
     xs = []
     ys = []
@@ -467,14 +473,10 @@ def dict_grid_to_list(
     grid: dict, grid_width: int = None, grid_height: int = None
 ) -> list[list[Any]]:
     if grid_width and grid_height:
-        tl_x, tl_y = (0, 0)
         br_x, br_y = (grid_width - 1, grid_height - 1)
     else:
-        [tl_x, tl_y], _, _, [br_x, br_y] = grid_bounds(grid)
-    return [
-        [grid.get((x, y), None) for x in range(tl_x, br_x + 1)]
-        for y in range(tl_y, br_y + 1)
-    ]
+        *_, [br_x, br_y] = grid_bounds(grid)
+    return [[grid.get((x, y), None) for x in range(br_x + 1)] for y in range(br_y + 1)]
 
 
 def all_grid_points(data: list[str]) -> Generator[Position, None, None]:
@@ -606,3 +608,30 @@ def rotate_direction(
             return Direction.WEST
         elif current_direction == Direction.WEST:
             return Direction.NORTH
+
+
+def compress_positions(positions: list[Position], pad=1):
+    xs = sorted({p[0] for p in positions})
+    ys = sorted({p[1] for p in positions})
+
+    def build_map(values: list[int]):
+        mapping: dict[int, int] = {}
+        inverse: dict[int, int] = {}
+        cur = pad
+        for i, v in enumerate(values):
+            mapping[v] = cur
+            inverse[cur] = v
+            if i + 1 < len(values):
+                # keep adjacency if consecutive; otherwise leave an empty index
+                if values[i + 1] == v + 1:
+                    cur += 1
+                else:
+                    cur += 2
+        size = cur + pad  # last assigned index + padding
+        return mapping, inverse, size
+
+    x_map, inv_x, width = build_map(xs)
+    y_map, inv_y, height = build_map(ys)
+
+    compressed = [(x_map[x], y_map[y]) for x, y in positions]
+    return compressed, x_map, y_map, inv_x, inv_y, width, height
