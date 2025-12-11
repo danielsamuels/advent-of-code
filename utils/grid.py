@@ -99,6 +99,17 @@ def bridge_points(start: Position, end: Position) -> Generator[Position, None, N
     return ((x, y) for x, y in [])
 
 
+def form_square(a: Position, b: Position) -> Generator[Position, None, None]:
+    min_x = min(a[0], b[0])
+    max_x = max(a[0], b[0])
+    min_y = min(a[1], b[1])
+    max_y = max(a[1], b[1])
+
+    for x in range(min_x, max_x + 1):
+        for y in range(min_y, max_y + 1):
+            yield x, y
+
+
 def bridge_str_points(start: str, end: str) -> Generator[Position, None, None]:
     input_points = (start, end)
     start, end = [tuple(map(int, point.split(","))) for point in input_points]
