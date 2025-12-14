@@ -6,4 +6,6 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "advent-of-code-data>=2.1.0",
+    "black>=25.12.0",
+    "tqdm>=4.67.1",
 ]
