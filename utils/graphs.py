@@ -36,7 +36,7 @@ def find_all_paths(
         ]
     """
 
-    @lru_cache(maxsize=256)
+    @lru_cache(maxsize=1024)
     def downstream_nodes(node: T) -> list[tuple[T, ...]]:
         if node == end:
             return [(node,)]
@@ -53,5 +53,7 @@ def find_all_paths(
                     suffixes.append(new_path)
 
         return suffixes
+
+    downstream_nodes.cache_clear()
 
     return downstream_nodes(start)

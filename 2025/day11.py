@@ -34,7 +34,7 @@ ggg: out
 hhh: out
 """.strip()
 
-TESTING = 2
+TESTING = 0
 if TESTING == 1:
     data = test_data
 if TESTING == 2:
@@ -55,11 +55,22 @@ def part_2() -> None:
         return "fft" in path and "dac" in path
 
     print("Starting the part 2 path-finding extravaganza")
-    paths = find_all_paths(devices, "svr", "out", test_fn)
-    print("Made all the paths!")
-    valid_paths = [path for path in paths if test_fn(path)]
-    p2_result = len(valid_paths)
-    pprint(valid_paths)
+    fft_dac_paths = find_all_paths(devices, "fft", "dac")
+    print(f"Found {len(fft_dac_paths)} paths from fft->dac")
+
+    if fft_dac_paths:
+        srv_fft_paths = find_all_paths(devices, "svr", "fft")
+        # Then we'd have fft_dac_paths
+        dac_out_paths = find_all_paths(devices, "dac", "out")
+        print(
+            f"{len(srv_fft_paths)} paths from src->fft, {len(fft_dac_paths)} paths from fft->dac and {len(dac_out_paths)} paths from dac->out"
+        )
+        p2_result = len(srv_fft_paths) * len(fft_dac_paths) * len(dac_out_paths)
+    else:
+        srv_dac_paths = find_all_paths(devices, "svr", "fft")
+        dac_fft_paths = find_all_paths(devices, "dac", "fft")
+        fft_out_paths = find_all_paths(devices, "fft", "out")
+        p2_result = len(srv_dac_paths) * len(fft_dac_paths) * len(fft_out_paths)
 
     print(f"{p2_result=}")
     if not TESTING:
